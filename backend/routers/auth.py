@@ -37,9 +37,15 @@ def register(req: RegisterReq, db: Session = Depends(get_db)):
                 password=hash_password(req.password))
     
     db.add(user); db.commit(); db.refresh(user)
-    return {'token': create_token(user.id, user.email),
-            'user': {'id': user.id, 'name': user.name, 'email': user.email}}
-
+    return {
+    'access_token': create_token(user.id, user.email),
+    'token_type': 'bearer',
+    'user': {
+        'id': user.id,
+        'name': user.name,
+        'email': user.email
+    }
+}
 
 @router.post('/auth/login')
 # def login(req: LoginReq, db: Session = Depends(get_db)):
@@ -82,9 +88,13 @@ def login(
     )
 
     return {
-        "access_token": token,
-        "token_type": "bearer"
+    "access_token": token,
+    "token_type": "bearer",
+    "user": {
+        "id": user.id,
+        "email": user.email
     }
+}
 
 
 @router.get('/auth/me')

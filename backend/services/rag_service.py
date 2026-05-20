@@ -93,7 +93,7 @@ from services.embed_service import (
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+load_dotenv()                                                                                                                    
 
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP"))

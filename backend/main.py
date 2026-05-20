@@ -25,4 +25,4 @@ async def on_startup():
     create_tables()   # creates docuassist.db and all tables on first run
 
 @app.get('/')
-def root(): return {'status': 'DocuAssist API running', 'docs': '/docs'}
+def root(): return {'status': 'DocuAssist API running', 'docs': '/docs'}   
