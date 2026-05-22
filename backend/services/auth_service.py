@@ -118,6 +118,6 @@ async def get_current_user(
     token: str = Depends(oauth2)
 ) -> dict:
 
-    print("TOKEN =", token)
+    # print("TOKEN =", token)
 
     return decode_token(token)

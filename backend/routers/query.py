@@ -10,7 +10,7 @@ import json
 
 router = APIRouter()
 
-class QueryReq(BaseModel):
+class QueryReq(BaseModel):                              
     question: str
     doc_ids:  list[str]
     chat_id:  str | None = None

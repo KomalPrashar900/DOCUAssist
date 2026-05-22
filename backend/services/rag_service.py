@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-print("GOOGLE_API_KEY =", os.getenv("GOOGLE_API_KEY"))
+"GOOGLE_API_KEY =", os.getenv("GOOGLE_API_KEY")
 
 """CHUNK_SIZE    = int(os.getenv('CHUNK_SIZE'))
 CHUNK_OVERLAP = int(os.getenv('CHUNK_OVERLAP'))
@@ -103,7 +103,7 @@ LLM_MODEL = os.getenv("LLM_MODEL")
 RAG_PROMPT = PromptTemplate(
     input_variables=["context", "question"],
     template="""
-You are a helpful document assistant.
+You are a helpful document assistant. 
 
 Answer the question using ONLY the information
 from the context below.

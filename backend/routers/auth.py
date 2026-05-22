@@ -61,8 +61,6 @@ def login(
     email = form_data.username
     password = form_data.password
 
-    print("LOGIN:", email)
-
     # Find user by email
     user = db.query(User).filter(
         User.email == email
