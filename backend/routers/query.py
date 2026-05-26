@@ -23,14 +23,20 @@ def ask(
 ):
     user_id = current['sub']
 
+    print("REQ CHAT ID =", req.chat_id)
+
     # Create or validate chat session
     if req.chat_id:
         chat = db.query(Chat).filter(Chat.id == req.chat_id,
                                      Chat.user_id == user_id).first()
         if not chat: raise HTTPException(404, 'Chat not found')
     else:
+        print("CREATING NEW CHAT")
         chat = Chat(user_id=user_id)
-        db.add(chat); db.commit(); db.refresh(chat)
+        db.add(chat); 
+        db.commit(); 
+        db.refresh(chat)
+        print("NEW CHAT ID =", chat.id)
 
     # Run RAG pipeline
     result = answer_question(user_id, req.doc_ids, req.question)

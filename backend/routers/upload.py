@@ -41,8 +41,14 @@ async def upload_pdf(
                            pages=str(len(pages)), chunks=str(chunks))
         db.add(doc_row); db.commit()
 
-        return {'doc_id': doc_id, 'filename': file.filename,
-                'pages': len(pages), 'chunks': chunks, 'status': 'ready'}
+        return {
+            "doc_id": doc_id,
+            "name": file.filename,
+            "filename": file.filename,
+            "pages": len(pages),
+            "chunks": chunks,
+            "status": "ready"
+        }
 
     except Exception as e:
         if os.path.exists(file_path): os.remove(file_path)

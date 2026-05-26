@@ -4,7 +4,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
-from streamlit import status, user
+# from streamlit import status, user
+from fastapi import status
 from services.auth_service import hash_password, verify_password, create_token, get_current_user
 from models import User
 from database import get_db
@@ -48,12 +49,6 @@ def register(req: RegisterReq, db: Session = Depends(get_db)):
 }
 
 @router.post('/auth/login')
-# def login(req: LoginReq, db: Session = Depends(get_db)):
-#     user = db.query(User).filter(User.email == req.email).first()
-#     if not user or not verify_password(req.password, user.password):
-#         raise HTTPException(401, 'Invalid email or password')
-#     return {'token': create_token(user.id, user.email),
-#             'user': {'id': user.id, 'name': user.name, 'email': user.email}}
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
@@ -96,10 +91,6 @@ def login(
 
 
 @router.get('/auth/me')
-# def me(current=Depends(get_current_user), db: Session = Depends(get_db)):
-#     user = db.query(User).filter(User.id == current['sub']).first()
-#     if not user: raise HTTPException(404, 'User not found')
-#     return {'id': user.id, 'name': user.name, 'email': user.email}
 def me(
     current=Depends(get_current_user),
     db: Session = Depends(get_db)
