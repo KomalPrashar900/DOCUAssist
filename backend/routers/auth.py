@@ -25,10 +25,6 @@ class LoginReq(BaseModel):
 
 @router.post('/auth/register')
 def register(req: RegisterReq, db: Session = Depends(get_db)):
-    print(type(req.password))
-    print(type(req.password))
-    print(len(req.password))
-    print(repr(req.password))
     if db.query(User).filter(User.email == req.email).first():
         raise HTTPException(400, 'Email already registered')
     if len(req.password) < 6:
@@ -37,65 +33,51 @@ def register(req: RegisterReq, db: Session = Depends(get_db)):
     user = User(name=req.name, email=req.email,
                 password=hash_password(req.password))
     
-    db.add(user); db.commit(); db.refresh(user)
+    db.add(user); 
+    db.commit(); 
+    db.refresh(user)
+
     return {
     'access_token': create_token(user.id, user.email),
     'token_type': 'bearer',
     'user': {
         'id': user.id,
         'name': user.name,
-        'email': user.email
-    }
-}
+        'email': user.email,
+    },
+}       
 
 @router.post('/auth/login')
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    email = form_data.username
-    password = form_data.password
-
-    # Find user by email
-    user = db.query(User).filter(
-        User.email == email
-    ).first()
-
-    if not user:
+    user = db.query(User).filter(User.email == form_data.username).first()
+ 
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
+            detail="Invalid email or password",
         )
-
-    # Verify password
-    if not verify_password(password, user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password"
-        )
-
-    # Create token with REAL user id
-    token = create_token(
-        user_id=str(user.id),
-        email=user.email
-    )
-
+ 
+    token = create_token(user_id=str(user.id), email=user.email)
+ 
     return {
-    "access_token": token,
-    "token_type": "bearer",
-    "user": {
-        "id": user.id,
-        "email": user.email
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "name": user.name,   # FIX: name included
+            "email": user.email,
+        },
     }
-}
-
 
 @router.get('/auth/me')
 def me(
     current=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    print("CURRENT USER =", current)
+    # print("CURRENT USER =", current)
 
     user = db.query(User).filter(
         User.id == current["sub"]

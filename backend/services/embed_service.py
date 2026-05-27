@@ -14,7 +14,7 @@ def get_embeddings():
     print("USING GEMINI EMBEDDING MODEL")
 
     return GoogleGenerativeAIEmbeddings(
-        model="models/gemini-embedding-001",
+        model="models/gemini-embedding-001",  #google embedding model optimized for RAG; also supports "models/textembedding-gecko-001" for general-purpose text embedding
         google_api_key=os.getenv("GOOGLE_API_KEY")
     )
 

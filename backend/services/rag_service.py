@@ -1,11 +1,5 @@
 # backend/services/rag_service.py
-# from langchain.text_splitter import RecursiveCharacterTextSplitter
-# from langchain_text_splitters import RecursiveCharacterTextSplitter
-# from langchain_openai import ChatOpenAI
-# from langchain_google_genai import ChatGoogleGenerativeAI
-# from langchain.prompts import PromptTemplate
-# from langchain_core.prompts import PromptTemplate
-# from services.embed_service import add_to_faiss, search_faiss
+# used to ingest documents (chunking + embedding) and answer questions (retrieval + LLM); uses langchain for RAG orchestration and Google Gemini as the LLM
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
@@ -14,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-"GOOGLE_API_KEY =", os.getenv("GOOGLE_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 from services.embed_service import (
     add_to_faiss,

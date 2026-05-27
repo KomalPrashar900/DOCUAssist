@@ -1,4 +1,5 @@
 # backend/services/pdf_service.py
+# used to read pdf files and extract text for RAG ingestion; uses PyMuPDF (fitz) for fast text extraction, with optional OCR fallback for scanned PDFs (requires pytesseract)
 import fitz  # PyMuPDF
 
 def extract_text_from_pdf(file_path: str) -> list[dict]:

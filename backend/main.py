@@ -6,12 +6,13 @@ from database import create_tables
 
 app = FastAPI(title='DocuAssist API', version='2.0.0',
               description='AI Document Intelligence — RAG + JWT Auth')
-
+   
+    
 app.add_middleware(CORSMiddleware,           
-    allow_origins=[ 'http://localhost:5173'],   # React dev server
+    allow_origins=[ 'http://localhost:5173'],   # React dev server   
     allow_methods=['*'],
     allow_headers=['*'],
-    allow_credentials=True)
+    allow_credentials=True)     
 
 # Public routes (no auth required)
 app.include_router(auth.router,      prefix='/api', tags=['Auth'])

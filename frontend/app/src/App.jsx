@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 
 /* ─── CSS ─────────────────────────────────────────────────────────────────── */
 const CSS = `
@@ -56,16 +56,19 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
   color:#fff;font-family:var(--font);font-size:13.5px;font-weight:600;cursor:pointer;
   transition:all .18s;margin-top:2px;box-shadow:0 0 0 rgba(37,99,235,0);}
 .auth-btn:hover{background:var(--blue2);box-shadow:0 0 22px var(--glow);}
+.auth-btn:disabled{opacity:.6;cursor:not-allowed;}
 .auth-err{background:var(--rbg);border:1px solid rgba(239,68,68,.2);border-radius:8px;
   padding:7px 11px;font-size:12px;color:var(--red);margin-bottom:11px;}
 .auth-hint{text-align:center;font-size:11px;color:var(--text4);margin-top:14px;}
+.auth-hint span{color:var(--blue3);cursor:pointer;}
 
 /* ── APP LAYOUT ── */
 .app{display:flex;height:100vh;overflow:hidden;}
 
 /* ── SIDEBAR ── */
 .sidebar{width:var(--sidebar);background:var(--bg1);border-right:1px solid var(--bdr);
-  display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+  display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;
+  transition:transform .25s ease;}
 .sb-head{padding:14px 10px 10px;}
 .sb-brand{display:flex;align-items:center;gap:8px;padding:0 4px;margin-bottom:12px;}
 .sb-brand-icon{width:26px;height:26px;background:var(--blue);border-radius:7px;
@@ -98,7 +101,6 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
   font-size:11px;flex-shrink:0;padding:0;}
 .hist-item:hover .hist-del{display:flex;}
 .hist-del:hover{color:var(--red);background:var(--rbg);}
-
 .hist-empty{padding:10px 12px;font-size:12px;color:var(--text3);line-height:1.55;}
 
 .sb-user{padding:11px 10px;border-top:1px solid var(--bdr);display:flex;
@@ -117,16 +119,21 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
 .logout-btn:hover{color:var(--red);background:var(--rbg);}
 
 /* ── MAIN ── */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg0);}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg0);min-width:0;}
 
 .topbar{padding:13px 20px;border-bottom:1px solid var(--bdr);
-  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.topbar-title{font-size:15px;font-weight:700;letter-spacing:-.3px;}
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;}
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.menu-btn{width:28px;height:28px;background:transparent;border:1px solid var(--bdr2);
+  border-radius:7px;display:none;align-items:center;justify-content:center;
+  color:var(--text2);cursor:pointer;flex-shrink:0;}
+.menu-btn:hover{border-color:var(--bdr2);background:var(--bg3);}
+.topbar-title{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .topbar-sub{font-size:11.5px;color:var(--text3);margin-top:2px;}
 .upload-trigger{display:flex;align-items:center;gap:6px;padding:7px 14px;
   background:var(--blue);border:none;border-radius:var(--r);color:#fff;
   font-family:var(--font);font-size:12.5px;font-weight:600;cursor:pointer;
-  transition:all .18s;box-shadow:0 0 16px var(--glow);}
+  transition:all .18s;box-shadow:0 0 16px var(--glow);white-space:nowrap;flex-shrink:0;}
 .upload-trigger:hover{background:var(--blue2);box-shadow:0 0 24px var(--glow);transform:translateY(-1px);}
 
 /* Upload panel */
@@ -158,6 +165,11 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
 .doc-chip-name{color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .doc-chip.on .doc-chip-name{color:var(--text);}
 .doc-chip-pg{font-size:10px;color:var(--text3);}
+.doc-actions{display:flex;gap:6px;margin-top:10px;}
+.doc-action-btn{padding:4px 10px;border:1px solid var(--bdr2);border-radius:6px;
+  background:transparent;color:var(--text3);font-size:11px;cursor:pointer;
+  font-family:var(--font);transition:all .14s;}
+.doc-action-btn:hover{border-color:var(--blue3);color:var(--blue3);}
 
 /* Messages */
 .msgs{flex:1;overflow-y:auto;padding:20px;}
@@ -248,101 +260,108 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
 .send-btn:hover{background:var(--blue2);transform:scale(1.05);}
 .send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
 .input-hint{font-size:10.5px;color:var(--text3);text-align:center;margin-top:7px;}
+
+/* Overlay for mobile sidebar */
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  z-index:99;backdrop-filter:blur(2px);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:700px){
+  :root{--sidebar:260px;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:100;
+    transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sidebar-overlay.open{display:block;}
+  .menu-btn{display:flex;}
+  .topbar{padding:10px 14px;}
+  .msgs{padding:12px;}
+  .input-bar{padding:10px 12px;}
+  .upload-panel{padding:10px 14px;}
+  .topbar-sub{display:none;}
+  .m-body{max-width:92%;}
+}
+@media(max-width:400px){
+  .auth-card{width:94vw;padding:28px 18px;}
+  .chips{flex-direction:column;align-items:center;}
+}
 `;
 
-/* ─── Config ─────────────────────────────────────────────────────────────── */
+/* ─── Config ──────────────────────────────────────────────────────────────── */
 const API = "http://localhost:8000/api";
 
-/* ─── Helpers ────────────────────────────────────────────────────────────── */
-const uid = () => Math.random().toString(36).slice(2, 10);
-const now = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
+const uid  = () => Math.random().toString(36).slice(2, 10);
+const now  = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 const initials = (name = "") =>
-  name.split(" ").map((w) => w[0]?.toUpperCase() || "").join("").slice(0, 2);
+  name.split(" ").map((w) => w[0]?.toUpperCase() || "").join("").slice(0, 2) || "U";
 
-
+/**
+ * FIX: apiFetch — was missing entirely, causing blank screen after login.
+ * All authenticated API calls route through here.
+ */
+async function apiFetch(path, options = {}, token = null) {
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  try {
+    const res = await fetch(`http://localhost:8000${path}`, {
+      ...options,
+      headers,
+    });
+    let data;
+    try { data = await res.json(); } catch { data = {}; }
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    console.error("apiFetch error:", path, err);
+    return { ok: false, status: 0, data: { detail: err.message } };
+  }
+}
 
 /* ─── Auth Screen ─────────────────────────────────────────────────────────── */
 function AuthScreen({ onLogin }) {
-  const [tab, setTab] = useState("login");
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [err, setErr] = useState("");
+  const [tab, setTab]       = useState("login");
+  const [form, setForm]     = useState({ name: "", email: "", password: "" });
+  const [err, setErr]       = useState("");
   const [loading, setLoading] = useState(false);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   async function submit() {
-  setErr("");
+    setErr("");
+    if (!form.email || !form.password) { setErr("Please fill in all fields."); return; }
+    if (tab === "signup" && !form.name) { setErr("Name is required."); return; }
+    setLoading(true);
 
-  if (!form.email || !form.password) {
-    setErr("Please fill in all fields.");
-    return;
-  }
+    try {
+      let res, data;
 
-  if (tab === "signup" && !form.name) {
-    setErr("Please enter your name.");
-    return;
-  }
+      if (tab === "login") {
+        // OAuth2PasswordRequestForm requires form-encoded body
+        const body = new URLSearchParams({ username: form.email, password: form.password });
+        res = await fetch(`http://localhost:8000/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body,
+        });
+      } else {
+        res = await fetch(`http://localhost:8000/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
+        });
+      }
 
-  if (tab === "signup" && form.password.length < 6) {
-    setErr("Password must be at least 6 characters.");
-    return;
-  }
-
-  setLoading(true);
-
-  try {
-  const path =
-  tab === "login"
-    ? "/api/auth/login"
-    : "/api/auth/register";
-
-    let body;
-
-    if (tab === "login") {
-      // OAuth2PasswordRequestForm ke liye
-      body = new URLSearchParams();
-      body.append("username", form.email);
-      body.append("password", form.password);
-    } else {
-      // signup JSON hi rahega
-      body = JSON.stringify({
-        name: form.name,
-        email: form.email,
-        password: form.password
-      });
+      data = await res.json();
+      if (res.ok) {
+        onLogin(data.access_token, data.user);
+      } else {
+        setErr(data.detail || "Authentication failed.");
+      }
+    } catch (e) {
+      setErr("Cannot reach server. Make sure the backend is running.");
+    } finally {
+      setLoading(false);
     }
-
-   const res = await fetch(`http://localhost:8000${path}`, {
-  method: "POST",
-  headers:
-    tab === "login"
-      ? {
-          "Content-Type":
-            "application/x-www-form-urlencoded",
-        }
-      : {
-          "Content-Type":
-            "application/json",
-        },
-  body,
-});
-
-const data = await res.json();
-const ok = res.ok;
-
-    if (ok) {
-      // backend access_token bhej raha hai
-      onLogin(data.access_token, data.user);
-    } else {
-      setErr(data.detail || "Authentication failed.");
-    }
-  } catch (err) {
-  console.error("LOGIN ERROR:", err);
-  setErr(err.message || "Something went wrong");
   }
-
-  setLoading(false);
-}
 
   return (
     <div className="auth-root">
@@ -366,19 +385,18 @@ const ok = res.ok;
 
         {tab === "signup" && (
           <div className="auth-field">
-            <label>Full name</label>
-            <input placeholder="Arjun Sharma" value={form.name} onChange={set("name")}
-              onKeyDown={(e) => e.key === "Enter" && submit()} />
+            <label>Name</label>
+            <input value={form.name} onChange={set("name")} placeholder="Your name" />
           </div>
         )}
         <div className="auth-field">
-          <label>Email address</label>
-          <input type="email" placeholder="you@example.com" value={form.email} onChange={set("email")}
+          <label>Email</label>
+          <input type="email" value={form.email} onChange={set("email")} placeholder="you@email.com"
             onKeyDown={(e) => e.key === "Enter" && submit()} />
         </div>
         <div className="auth-field">
           <label>Password</label>
-          <input type="password" placeholder="••••••••" value={form.password} onChange={set("password")}
+          <input type="password" value={form.password} onChange={set("password")} placeholder="••••••••"
             onKeyDown={(e) => e.key === "Enter" && submit()} />
         </div>
         <button className="auth-btn" onClick={submit} disabled={loading}>
@@ -386,8 +404,7 @@ const ok = res.ok;
         </button>
         <div className="auth-hint">
           {tab === "login" ? "Don't have an account? " : "Already have an account? "}
-          <span style={{ color: "var(--blue3)", cursor: "pointer" }}
-            onClick={() => { setTab(tab === "login" ? "signup" : "login"); setErr(""); }}>
+          <span onClick={() => { setTab(tab === "login" ? "signup" : "login"); setErr(""); }}>
             {tab === "login" ? "Create one" : "Sign in"}
           </span>
         </div>
@@ -396,11 +413,11 @@ const ok = res.ok;
   );
 }
 
-/* ─── Message ─────────────────────────────────────────────────────────────── */
+/* ─── Message Component ───────────────────────────────────────────────────── */
 function Message({ msg, userInitials }) {
   const isBot = msg.role === "assistant";
   const [srcOpen, setSrcOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied]   = useState(false);
 
   function copy() {
     navigator.clipboard?.writeText(msg.content);
@@ -438,10 +455,12 @@ function Message({ msg, userInitials }) {
                   .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
                   .replace(/`(.+?)`/g, `<code style="background:rgba(255,255,255,0.07);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12px;">$1</code>`);
                 if (line.startsWith("• ") || line.startsWith("- ")) {
-                  return <div key={i} style={{ display: "flex", gap: 7, alignItems: "flex-start", marginBottom: 3 }}>
-                    <span style={{ color: "var(--blue3)", marginTop: 2, flexShrink: 0 }}>•</span>
-                    <span dangerouslySetInnerHTML={{ __html: html.replace(/^[•\-]\s/, "") }}/>
-                  </div>;
+                  return (
+                    <div key={i} style={{ display: "flex", gap: 7, alignItems: "flex-start", marginBottom: 3 }}>
+                      <span style={{ color: "var(--blue3)", marginTop: 2, flexShrink: 0 }}>•</span>
+                      <span dangerouslySetInnerHTML={{ __html: html.replace(/^[•\-]\s/, "") }}/>
+                    </div>
+                  );
                 }
                 return <div key={i} dangerouslySetInnerHTML={{ __html: html }}/>;
               })}
@@ -475,8 +494,6 @@ function Message({ msg, userInitials }) {
                 <button className={`act-btn${copied ? " copied" : ""}`} onClick={copy}>
                   {copied ? "✓ Copied" : "Copy"}
                 </button>
-                <button className="act-btn">👍</button>
-                <button className="act-btn">👎</button>
               </div>
             )}
             <div className="m-time">{msg.time}</div>
@@ -489,35 +506,55 @@ function Message({ msg, userInitials }) {
 
 /* ─── Main App ────────────────────────────────────────────────────────────── */
 export default function DocuAssist() {
-  const [token, setToken]             = useState(null);
-  const [user, setUser]               = useState(null);
-  const [chats, setChats]             = useState([]);
+  const [token, setToken]               = useState(() => localStorage.getItem("da_token"));
+  const [user, setUser]                 = useState(() => {
+    try { return JSON.parse(localStorage.getItem("da_user") || "null"); } catch { return null; }
+  });
+  const [chats, setChats]               = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
-  const [messages, setMessages]       = useState([]);
-  const [docs, setDocs]               = useState([]);
+  const [messages, setMessages]         = useState([]);
+  const [docs, setDocs]                 = useState([]);
   const [activeDocIds, setActiveDocIds] = useState([]);
-  const [showUpload, setShowUpload]   = useState(false);
-  const [uploading, setUploading]     = useState(false);
-  const [uploadFile, setUploadFile]   = useState("");
-  const [uploadDone, setUploadDone]   = useState("");
-  const [dragging, setDragging]       = useState(false);
-  const [question, setQuestion]       = useState("");
-  const [isAnswering, setIsAnswering] = useState(false);
-  const fileRef  = useRef(null);
-  const msgsRef  = useRef(null);
+  const [showUpload, setShowUpload]     = useState(false);
+  const [uploading, setUploading]       = useState(false);
+  const [uploadFile, setUploadFile]     = useState("");
+  const [uploadDone, setUploadDone]     = useState("");
+  const [dragging, setDragging]         = useState(false);
+  const [question, setQuestion]         = useState("");
+  const [isAnswering, setIsAnswering]   = useState(false);
+  const [sidebarOpen, setSidebarOpen]   = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const fileRef = useRef(null);
+  const msgsRef = useRef(null);
 
-  // Scroll to bottom on new message
+  // Auto-scroll on new message
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages]);
 
-  // Load chats + docs after login
+  // FIX: Persist token/user across page refresh
+  useEffect(() => {
+    if (token) localStorage.setItem("da_token", token);
+    else localStorage.removeItem("da_token");
+  }, [token]);
+  useEffect(() => {
+    if (user) localStorage.setItem("da_user", JSON.stringify(user));
+    else localStorage.removeItem("da_user");
+  }, [user]);
+
+  // FIX: Load initial data on mount if already logged in
+  useEffect(() => {
+    if (token) loadInitial(token);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function loadInitial(tok) {
     const [cr, dr] = await Promise.all([
       apiFetch("/api/chats", {}, tok),
       apiFetch("/api/documents", {}, tok),
     ]);
     if (cr.ok) setChats(cr.data);
+    else if (cr.status === 401) { handleLogout(); return; }
     if (dr.ok) {
       setDocs(dr.data);
       setActiveDocIds(dr.data.map((d) => d.id));
@@ -525,27 +562,45 @@ export default function DocuAssist() {
   }
 
   function handleLogin(tok, usr) {
-    setToken(tok); setUser(usr);
+    setToken(tok);
+    setUser(usr);
     loadInitial(tok);
   }
+
   function handleLogout() {
-    setToken(null); setUser(null); setChats([]); setMessages([]);
-    setDocs([]); setActiveDocIds([]); setActiveChatId(null);
+    setToken(null); setUser(null);
+    setChats([]); setMessages([]);
+    setDocs([]); setActiveDocIds([]);
+    setActiveChatId(null);
+    localStorage.removeItem("da_token");
+    localStorage.removeItem("da_user");
   }
 
   async function newChat() {
-    const { ok, data } = await apiFetch("/api/chats", { method: "POST", body: JSON.stringify({}) }, token);
+    const { ok, data } = await apiFetch("/api/chats", {
+      method: "POST", body: JSON.stringify({})
+    }, token);
     if (ok) {
       setChats((prev) => [data, ...prev]);
       setActiveChatId(data.id);
       setMessages([]);
+      setSidebarOpen(false);
     }
   }
 
+  // FIX: Chat history selection now works — apiFetch is defined
   async function selectChat(id) {
+    if (id === activeChatId) { setSidebarOpen(false); return; }
+    setLoadingHistory(true);
     setActiveChatId(id);
+    setMessages([]);
     const { ok, data } = await apiFetch(`/api/chats/${id}/messages`, {}, token);
-    if (ok) setMessages(data);
+    if (ok) {
+      // Attach timestamp display to loaded messages
+      setMessages(data.map((m) => ({ ...m, time: "" })));
+    }
+    setLoadingHistory(false);
+    setSidebarOpen(false);
   }
 
   async function deleteChat(id) {
@@ -554,184 +609,107 @@ export default function DocuAssist() {
     if (activeChatId === id) { setActiveChatId(null); setMessages([]); }
   }
 
+  // FIX: Document toggle — select/deselect individual docs
   function toggleDoc(id) {
     setActiveDocIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   }
 
- async function handleUpload(file) {
-  if (!file || !file.name.toLowerCase().endsWith(".pdf")) {
-    setUploadDone("Only PDF files allowed");
-    return;
-  }
+  function selectAllDocs() { setActiveDocIds(docs.map((d) => d.id)); }
+  function selectNoDocs()   { setActiveDocIds([]); }
 
-  setUploading(true);
-  setUploadFile(file.name);
-  setUploadDone("");
-
-  try {
-    const fd = new FormData();
-    fd.append("file", file);
-
-    const res = await fetch(`${API}/upload`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: fd,
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.detail || "Upload failed");
+  async function handleUpload(file) {
+    if (!file || !file.name.toLowerCase().endsWith(".pdf")) {
+      setUploadDone("Only PDF files allowed.");
+      return;
     }
+    setUploading(true);
+    setUploadFile(file.name);
+    setUploadDone("");
 
-    const uploadedDoc = {
-      id: data.id || data.doc_id,
-      name: data.name || data.filename,
-      filename: data.filename,
-      pages: data.pages,
-      chunks: data.chunks,
-    };
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`${API}/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Upload failed");
 
-    setDocs((prev) => [...prev, uploadedDoc]);
-
-    setActiveDocIds((prev) => [
-      ...prev,
-      uploadedDoc.id,
-    ]);
-
-    setUploadDone(
-      `✓ ${uploadedDoc.name} — ${uploadedDoc.pages} pages · ${uploadedDoc.chunks} chunks indexed`
-    );
-  } catch (err) {
-    console.error("UPLOAD ERROR:", err);
-    setUploadDone(`Failed: ${err.message}`);
-  } finally {
-    setUploading(false);
+      const doc = {
+        id: data.doc_id || data.id,
+        name: data.name || data.filename,
+        pages: data.pages,
+        chunks: data.chunks,
+      };
+      setDocs((prev) => [doc, ...prev]);
+      setActiveDocIds((prev) => [doc.id, ...prev]);
+      setUploadDone(`✓ ${doc.name} — ${doc.pages} pages · ${doc.chunks} chunks indexed`);
+    } catch (err) {
+      setUploadDone(`Failed: ${err.message}`);
+    } finally {
+      setUploading(false);
+    }
   }
-}
+
   async function handleAsk() {
-  if (!question.trim() || isAnswering || !activeDocIds.length) return;
+    if (!question.trim() || isAnswering || !activeDocIds.length) return;
+    const q = question.trim();
+    setQuestion("");
+    setIsAnswering(true);
 
-  const q = question.trim();
+    const userMsg   = { id: uid(), role: "user",      content: q,  time: now(), sources: [] };
+    const typingMsg = { id: uid(), role: "assistant",  content: "", typing: true, time: now() };
+    setMessages((p) => [...p, userMsg, typingMsg]);
 
-  setQuestion("");
-  setIsAnswering(true);
+    try {
+      const res = await fetch(`${API}/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ question: q, doc_ids: activeDocIds, chat_id: activeChatId ?? null }),
+      });
+      const data = await res.json();
 
-  // optimistic UI
-  const userMsg = {
-    id: uid(),
-    role: "user",
-    content: q,
-    time: now(),
-    sources: [],
-  };
-
-  const typingMsg = {
-    id: uid(),
-    role: "assistant",
-    content: "",
-    typing: true,
-    time: now(),
-  };
-
-  setMessages((p) => [...p, userMsg, typingMsg]);
-
-  try {
-    const res = await fetch(`${API}/ask`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        question: q,
-        doc_ids: activeDocIds,
-        chat_id: activeChatId ?? null,
-      }),
-    });
-
-    const data = await res.json();
-
-    setMessages((prev) => {
-      const withoutTyping = prev.filter((m) => !m.typing);
-
-      if (!res.ok) {
-        return [
-          ...withoutTyping,
-          {
-            id: uid(),
-            role: "assistant",
-            content: `Error: ${data.detail || "Query failed"}`,
-            sources: [],
-            time: now(),
-          },
-        ];
-      }
-
-      return [
-        ...withoutTyping,
-        {
+      setMessages((prev) => {
+        const without = prev.filter((m) => !m.typing);
+        const botMsg = {
           id: uid(),
           role: "assistant",
-          content: data.answer,
-          sources: data.sources || [],
+          content: res.ok ? data.answer : `Error: ${data.detail || "Query failed"}`,
+          sources: res.ok ? (data.sources || []) : [],
           time: now(),
-        },
-      ];
-    });
-
-    // backend-generated chat id
-    if (data.chat_id) {
-      setActiveChatId(data.chat_id);
-
-      setChats((prev) => {
-        const exists = prev.find((c) => c.id === data.chat_id);
-
-        if (exists) {
-          return prev.map((c) =>
-            c.id === data.chat_id
-              ? {
-                  ...c,
-                  title:
-                    c.title === "New conversation"
-                      ? q.slice(0, 55)
-                      : c.title,
-                }
-              : c
-          );
-        }
-
-        // first message → backend created new chat
-        return [
-          {
-            id: data.chat_id,
-            title: q.slice(0, 55),
-          },
-          ...prev,
-        ];
+        };
+        return [...without, botMsg];
       });
-    }
-  } catch (err) {
-    console.error("ASK ERROR:", err);
 
-    setMessages((prev) => [
-      ...prev.filter((m) => !m.typing),
-      {
-        id: uid(),
-        role: "assistant",
-        content: "Server error while answering question.",
-        sources: [],
-        time: now(),
-      },
-    ]);
-  } finally {
-    setIsAnswering(false);
+      // FIX: Update chat list with new/updated chat from backend
+      if (data.chat_id) {
+        setActiveChatId(data.chat_id);
+        setChats((prev) => {
+          const exists = prev.find((c) => c.id === data.chat_id);
+          if (exists) {
+            return prev.map((c) =>
+              c.id === data.chat_id
+                ? { ...c, title: c.title === "New conversation" ? q.slice(0, 55) : c.title }
+                : c
+            );
+          }
+          return [{ id: data.chat_id, title: q.slice(0, 55) }, ...prev];
+        });
+      }
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev.filter((m) => !m.typing),
+        { id: uid(), role: "assistant", content: "Server error — is the backend running?", sources: [], time: now() },
+      ]);
+    } finally {
+      setIsAnswering(false);
+    }
   }
-}
+
   const SUGGESTIONS = [
     "What is the main topic of this document?",
     "Summarize the key points",
@@ -747,8 +725,13 @@ export default function DocuAssist() {
     <>
       <style>{CSS}</style>
       <div className="app">
+
+        {/* Mobile sidebar overlay */}
+        <div className={`sidebar-overlay${sidebarOpen ? " open" : ""}`}
+          onClick={() => setSidebarOpen(false)} />
+
         {/* ── SIDEBAR ── */}
-        <div className="sidebar">
+        <div className={`sidebar${sidebarOpen ? " open" : ""}`}>
           <div className="sb-head">
             <div className="sb-brand">
               <div className="sb-brand-icon">📄</div>
@@ -762,7 +745,7 @@ export default function DocuAssist() {
 
           <div className="hist-scroll">
             {chats.length === 0
-              ? <div className="hist-empty">No conversations yet.<br/>Upload a PDF and start asking questions.</div>
+              ? <div className="hist-empty">No conversations yet.<br/>Upload a PDF and start asking.</div>
               : <>
                   <div className="hist-label">Conversations</div>
                   {chats.map((c) => (
@@ -770,7 +753,8 @@ export default function DocuAssist() {
                       onClick={() => selectChat(c.id)}>
                       <div className="hist-dot"/>
                       <div className="hist-txt">{c.title || "New conversation"}</div>
-                      <button className="hist-del" onClick={(e) => { e.stopPropagation(); deleteChat(c.id); }}>
+                      <button className="hist-del"
+                        onClick={(e) => { e.stopPropagation(); deleteChat(c.id); }}>
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                       </button>
                     </div>
@@ -782,7 +766,7 @@ export default function DocuAssist() {
           <div className="sb-user">
             <div className="user-av">{userInits}</div>
             <div className="user-info">
-              <div className="user-nm">{user?.name}</div>
+              <div className="user-nm">{user?.name || "User"}</div>
               <div className="user-em">{user?.email}</div>
             </div>
             <button className="logout-btn" onClick={handleLogout} title="Sign out">
@@ -798,16 +782,22 @@ export default function DocuAssist() {
         <div className="main">
           {/* Topbar */}
           <div className="topbar">
-            <div>
-              <div className="topbar-title">Document Intelligent Assistant</div>
-              <div className="topbar-sub">Answers sourced exclusively from your uploaded PDFs</div>
+            <div className="topbar-left">
+              <button className="menu-btn" onClick={() => setSidebarOpen((o) => !o)}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
+              <div>
+                <div className="topbar-title">Document Intelligent Assistant</div>
+                <div className="topbar-sub">Answers sourced exclusively from your uploaded PDFs</div>
+              </div>
             </div>
-            <button className="upload-trigger" onClick={() => { setShowUpload((o) => !o); setUploadDone(""); }}>
+            <button className="upload-trigger"
+              onClick={() => { setShowUpload((o) => !o); setUploadDone(""); }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              Upload PDF {docs.length > 0 && `· ${docs.length} loaded`}
+              Upload PDF{docs.length > 0 && ` · ${docs.length}`}
             </button>
           </div>
 
@@ -835,10 +825,17 @@ export default function DocuAssist() {
               )}
               {uploadDone && <div className="upload-ok">{uploadDone}</div>}
 
+              {/* FIX: Document selection with select-all / deselect-all controls */}
               {docs.length > 0 && (
                 <div style={{ marginTop: 12 }}>
-                  <div style={{ fontSize: 11, color: "var(--text3)", marginBottom: 6, fontWeight: 500 }}>
-                    Select documents to include in search:
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                    <div style={{ fontSize: 11, color: "var(--text3)", fontWeight: 500 }}>
+                      Select documents for search ({activeDocIds.length}/{docs.length} active):
+                    </div>
+                    <div className="doc-actions">
+                      <button className="doc-action-btn" onClick={selectAllDocs}>All</button>
+                      <button className="doc-action-btn" onClick={selectNoDocs}>None</button>
+                    </div>
                   </div>
                   <div className="doc-chips">
                     {docs.map((d) => {
@@ -846,7 +843,7 @@ export default function DocuAssist() {
                       return (
                         <div key={d.id} className={`doc-chip${on ? " on" : ""}`} onClick={() => toggleDoc(d.id)}>
                           <div className="doc-chip-dot"/>
-                          <span className="doc-chip-name">{d.name || d.filename}</span>
+                          <span className="doc-chip-name">{d.name}</span>
                           <span className="doc-chip-pg">{d.pages}p</span>
                         </div>
                       );
@@ -859,7 +856,11 @@ export default function DocuAssist() {
 
           {/* Messages */}
           <div className="msgs" ref={msgsRef}>
-            {messages.length === 0 ? (
+            {loadingHistory ? (
+              <div className="empty-state">
+                <div className="spin" style={{ width: 22, height: 22, borderWidth: 3 }}/>
+              </div>
+            ) : messages.length === 0 ? (
               <div className="empty-state">
                 <div className="empty-icon">📄</div>
                 <div className="empty-title">Welcome, {user?.name?.split(" ")[0] || "there"}</div>
@@ -870,13 +871,10 @@ export default function DocuAssist() {
                 </div>
                 <div className="chips">
                   {SUGGESTIONS.map((s) => (
-                    <button key={s} className="sug-chip" onClick={() => {
-                      if (!activeDocIds.length) return;
-                      setQuestion(s);
-                      setTimeout(() => {
-                        document.querySelector(".input-wrap input")?.focus();
-                      }, 50);
-                    }}>"{s}"</button>
+                    <button key={s} className="sug-chip"
+                      onClick={() => { if (!activeDocIds.length) return; setQuestion(s); }}>
+                      "{s}"
+                    </button>
                   ))}
                 </div>
               </div>
@@ -889,7 +887,7 @@ export default function DocuAssist() {
 
           {/* Input */}
           <div className="input-bar">
-            {activeChatId && activeDocIds.length === 0 && docs.length > 0 && (
+            {activeDocIds.length === 0 && docs.length > 0 && (
               <div className="warn-bar">
                 <span>⚠</span> No documents selected — click "Upload PDF" to select documents.
               </div>
@@ -914,7 +912,7 @@ export default function DocuAssist() {
                 </svg>
               </button>
             </div>
-            <div className="input-hint">DocuAssist answers only from your documents · RAG + FAISS · FastAPI backend</div>
+            <div className="input-hint">DocuAssist answers only from your documents · RAG + FAISS · FastAPI + Gemini</div>
           </div>
         </div>
       </div>

@@ -1,4 +1,7 @@
 # backend/routers/history.py
+import os
+import shutil
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from services.auth_service import get_current_user
@@ -42,3 +45,5 @@ def delete_chat(chat_id: str, current=Depends(get_current_user),
     db.query(Message).filter(Message.chat_id == chat_id).delete()
     db.delete(chat); db.commit()
     return {'status': 'deleted'}
+
+   
