@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 /* ─── CSS ─────────────────────────────────────────────────────────────────── */
 const CSS = `
@@ -44,23 +44,42 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
 .auth-tab{flex:1;padding:7px;text-align:center;border-radius:8px;cursor:pointer;
   font-size:12.5px;font-weight:500;color:var(--text2);transition:all .18s;}
 .auth-tab.on{background:var(--bg4);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.5);}
-.auth-field{margin-bottom:13px;}
+.auth-field{margin-bottom:13px;position:relative;}
 .auth-field label{display:block;font-size:11.5px;font-weight:500;color:var(--text3);
   margin-bottom:5px;letter-spacing:.2px;}
 .auth-field input{width:100%;background:var(--bg3);border:1px solid var(--bdr2);
   border-radius:9px;padding:9px 13px;color:var(--text);font-family:var(--font);
   font-size:13.5px;outline:none;transition:border-color .18s,box-shadow .18s;}
 .auth-field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--glow2);}
+.auth-field input.err{border-color:var(--red);}
 .auth-field input::placeholder{color:var(--text4);}
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:38px;}
+.pw-eye{position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  background:none;border:none;color:var(--text3);cursor:pointer;padding:2px;
+  display:flex;align-items:center;transition:color .15s;}
+.pw-eye:hover{color:var(--text2);}
 .auth-btn{width:100%;padding:10px;background:var(--blue);border:none;border-radius:9px;
   color:#fff;font-family:var(--font);font-size:13.5px;font-weight:600;cursor:pointer;
   transition:all .18s;margin-top:2px;box-shadow:0 0 0 rgba(37,99,235,0);}
 .auth-btn:hover{background:var(--blue2);box-shadow:0 0 22px var(--glow);}
 .auth-btn:disabled{opacity:.6;cursor:not-allowed;}
+.auth-btn.secondary{background:transparent;border:1px solid var(--bdr2);color:var(--text2);
+  box-shadow:none;margin-top:8px;}
+.auth-btn.secondary:hover{border-color:var(--blue3);color:var(--blue3);box-shadow:none;}
 .auth-err{background:var(--rbg);border:1px solid rgba(239,68,68,.2);border-radius:8px;
   padding:7px 11px;font-size:12px;color:var(--red);margin-bottom:11px;}
+.auth-ok{background:var(--gbg);border:1px solid rgba(16,185,129,.2);border-radius:8px;
+  padding:7px 11px;font-size:12px;color:var(--green);margin-bottom:11px;}
 .auth-hint{text-align:center;font-size:11px;color:var(--text4);margin-top:14px;}
 .auth-hint span{color:var(--blue3);cursor:pointer;}
+.auth-hint span:hover{text-decoration:underline;}
+.auth-remember{display:flex;align-items:center;gap:7px;margin-bottom:13px;cursor:pointer;}
+.auth-remember input[type=checkbox]{width:14px;height:14px;accent-color:var(--blue);cursor:pointer;}
+.auth-remember span{font-size:12px;color:var(--text3);}
+.auth-forgot{display:block;text-align:right;font-size:11px;color:var(--blue3);
+  cursor:pointer;margin-bottom:13px;margin-top:-8px;}
+.auth-forgot:hover{text-decoration:underline;}
 
 /* ── APP LAYOUT ── */
 .app{display:flex;height:100vh;overflow:hidden;}
@@ -127,7 +146,7 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
 .menu-btn{width:28px;height:28px;background:transparent;border:1px solid var(--bdr2);
   border-radius:7px;display:none;align-items:center;justify-content:center;
   color:var(--text2);cursor:pointer;flex-shrink:0;}
-.menu-btn:hover{border-color:var(--bdr2);background:var(--bg3);}
+.menu-btn:hover{background:var(--bg3);}
 .topbar-title{font-size:15px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .topbar-sub{font-size:11.5px;color:var(--text3);margin-top:2px;}
 .upload-trigger{display:flex;align-items:center;gap:6px;padding:7px 14px;
@@ -158,18 +177,43 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
 .doc-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 .doc-chip{display:flex;align-items:center;gap:6px;padding:5px 10px;
   background:var(--bg4);border:1px solid var(--bdr2);border-radius:20px;
-  cursor:pointer;transition:all .15s;font-size:11.5px;}
+  cursor:pointer;transition:all .15s;font-size:11.5px;user-select:none;}
 .doc-chip.on{border-color:var(--blue);background:rgba(37,99,235,0.10);}
 .doc-chip-dot{width:7px;height:7px;border-radius:50%;background:var(--bdr2);flex-shrink:0;}
 .doc-chip.on .doc-chip-dot{background:var(--green);}
 .doc-chip-name{color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .doc-chip.on .doc-chip-name{color:var(--text);}
 .doc-chip-pg{font-size:10px;color:var(--text3);}
+.doc-chip-del{width:16px;height:16px;border:none;background:transparent;
+  color:var(--text4);cursor:pointer;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;padding:0;flex-shrink:0;transition:all .14s;font-size:10px;line-height:1;}
+.doc-chip-del:hover{color:var(--red);background:var(--rbg);}
 .doc-actions{display:flex;gap:6px;margin-top:10px;}
 .doc-action-btn{padding:4px 10px;border:1px solid var(--bdr2);border-radius:6px;
   background:transparent;color:var(--text3);font-size:11px;cursor:pointer;
   font-family:var(--font);transition:all .14s;}
 .doc-action-btn:hover{border-color:var(--blue3);color:var(--blue3);}
+
+/* Delete confirmation modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;
+  display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px);
+  animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border:1px solid var(--bdr2);border-radius:16px;
+  padding:28px 28px 22px;width:340px;box-shadow:0 24px 64px rgba(0,0,0,.6);
+  animation:scaleIn .18s ease;}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:none}}
+.modal-title{font-size:15px;font-weight:600;margin-bottom:8px;}
+.modal-body{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px;}
+.modal-body strong{color:var(--text);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.modal-btn{padding:8px 18px;border-radius:8px;font-family:var(--font);
+  font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;}
+.modal-btn.cancel{background:var(--bg4);color:var(--text2);border:1px solid var(--bdr2);}
+.modal-btn.cancel:hover{border-color:var(--bdr2);color:var(--text);}
+.modal-btn.danger{background:var(--red);color:#fff;}
+.modal-btn.danger:hover{background:#dc2626;}
+.modal-btn:disabled{opacity:.55;cursor:not-allowed;}
 
 /* Messages */
 .msgs{flex:1;overflow-y:auto;padding:20px;}
@@ -185,7 +229,9 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
   font-family:var(--font);}
 .sug-chip:hover{border-color:var(--blue);color:var(--text);background:var(--glow2);}
 
-.msg-row{display:flex;gap:11px;align-items:flex-start;margin-bottom:18px;}
+.msg-row{display:flex;gap:11px;align-items:flex-start;margin-bottom:18px;
+  animation:msgIn .22s ease;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .msg-row.usr{flex-direction:row-reverse;}
 .m-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;
   display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
@@ -260,8 +306,10 @@ body{font-family:var(--font);background:var(--bg0);color:var(--text);
 .send-btn:hover{background:var(--blue2);transform:scale(1.05);}
 .send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
 .input-hint{font-size:10.5px;color:var(--text3);text-align:center;margin-top:7px;}
+.kbd{display:inline;background:var(--bg3);border:1px solid var(--bdr2);
+  border-radius:3px;padding:0 4px;font-family:var(--mono);font-size:9.5px;}
 
-/* Overlay for mobile sidebar */
+/* Mobile sidebar overlay */
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
   z-index:99;backdrop-filter:blur(2px);}
 
@@ -295,18 +343,11 @@ const now  = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: 
 const initials = (name = "") =>
   name.split(" ").map((w) => w[0]?.toUpperCase() || "").join("").slice(0, 2) || "U";
 
-/**
- * FIX: apiFetch — was missing entirely, causing blank screen after login.
- * All authenticated API calls route through here.
- */
 async function apiFetch(path, options = {}, token = null) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
   if (token) headers["Authorization"] = `Bearer ${token}`;
   try {
-    const res = await fetch(`http://localhost:8000${path}`, {
-      ...options,
-      headers,
-    });
+    const res = await fetch(`http://localhost:8000${path}`, { ...options, headers });
     let data;
     try { data = await res.json(); } catch { data = {}; }
     return { ok: res.ok, status: res.status, data };
@@ -316,53 +357,207 @@ async function apiFetch(path, options = {}, token = null) {
   }
 }
 
+/* ─── Eye icon ─────────────────────────────────────────────────────────────── */
+function EyeIcon({ open }) {
+  return open ? (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+    </svg>
+  ) : (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
+}
+
 /* ─── Auth Screen ─────────────────────────────────────────────────────────── */
-function AuthScreen({ onLogin }) {
-  const [tab, setTab]       = useState("login");
-  const [form, setForm]     = useState({ name: "", email: "", password: "" });
-  const [err, setErr]       = useState("");
-  const [loading, setLoading] = useState(false);
+function AuthScreen({ onLogin, initialResetToken }) {
+  // Determine initial view: if a reset token is in the URL, go straight to reset
+  const [view, setView]         = useState(initialResetToken ? "reset" : "login");
+  const [tab, setTab]           = useState("login");
+  const [form, setForm]         = useState({ name: "", email: "", password: "", newPw: "", newPw2: "" });
+  const [showPw, setShowPw]     = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const [err, setErr]           = useState("");
+  const [ok, setOk]             = useState("");
+  const [loading, setLoading]   = useState(false);
+  const [resetToken]            = useState(initialResetToken || "");
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   async function submit() {
-    setErr("");
+    setErr(""); setOk("");
     if (!form.email || !form.password) { setErr("Please fill in all fields."); return; }
-    if (tab === "signup" && !form.name) { setErr("Name is required."); return; }
+    if (tab === "signup" && !form.name.trim()) { setErr("Name is required."); return; }
+    if (tab === "signup" && form.password.length < 6) {
+      setErr("Password must be at least 6 characters."); return;
+    }
     setLoading(true);
-
     try {
-      let res, data;
-
+      let res;
       if (tab === "login") {
-        // OAuth2PasswordRequestForm requires form-encoded body
         const body = new URLSearchParams({ username: form.email, password: form.password });
-        res = await fetch(`http://localhost:8000/api/auth/login`, {
+        res = await fetch(`${API}/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
           body,
         });
       } else {
-        res = await fetch(`http://localhost:8000/api/auth/register`, {
+        res = await fetch(`${API}/auth/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
         });
       }
-
-      data = await res.json();
+      const data = await res.json();
       if (res.ok) {
+        if (remember) {
+          localStorage.setItem("da_remember_email", form.email);
+        } else {
+          localStorage.removeItem("da_remember_email");
+        }
         onLogin(data.access_token, data.user);
       } else {
         setErr(data.detail || "Authentication failed.");
       }
-    } catch (e) {
+    } catch {
       setErr("Cannot reach server. Make sure the backend is running.");
+    } finally {  
+      setLoading(false);
+    }
+  }
+
+  async function submitForgot() {
+    setErr(""); setOk("");
+    if (!form.email) { setErr("Please enter your email address."); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOk(data.message);
+      } else {
+        setErr(data.detail || "Failed to send reset email.");
+      }
+    } catch {
+      setErr("Cannot reach server.");
     } finally {
       setLoading(false);
     }
   }
 
+  async function submitReset() {
+    setErr(""); setOk("");
+    if (!form.newPw || !form.newPw2) { setErr("Please fill in both fields."); return; }
+    if (form.newPw.length < 6) { setErr("Password must be at least 6 characters."); return; }
+    if (form.newPw !== form.newPw2) { setErr("Passwords do not match."); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken, new_password: form.newPw }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOk(data.message + " You can now sign in.");
+        setTimeout(() => { setView("login"); setOk(""); }, 2500);
+      } else {
+        setErr(data.detail || "Reset failed.");
+      }
+    } catch {
+      setErr("Cannot reach server.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Pre-fill remembered email
+  useEffect(() => {
+    const saved = localStorage.getItem("da_remember_email");
+    if (saved) { setForm((f) => ({ ...f, email: saved })); setRemember(true); }
+  }, []);
+
+  const onKey = (fn) => (e) => { if (e.key === "Enter") fn(); };
+
+  /* ── Forgot password view ── */
+  if (view === "forgot") return (
+    <div className="auth-root">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="auth-brand-icon">📄</div>
+          <div className="auth-brand-name">DOCU<span>Assist</span></div>
+        </div>
+        <div className="auth-sub">Enter your email to receive a reset link</div>
+        {err && <div className="auth-err">{err}</div>}
+        {ok  && <div className="auth-ok">{ok}</div>}
+        {!ok && <>
+          <div className="auth-field">
+            <label>Email address</label>
+            <input type="email" value={form.email} onChange={set("email")}
+              placeholder="you@email.com" onKeyDown={onKey(submitForgot)} autoFocus/>
+          </div>
+          <button className="auth-btn" onClick={submitForgot} disabled={loading}>
+            {loading ? "Sending…" : "Send reset link →"}
+          </button>
+        </>}
+        <button className="auth-btn secondary" onClick={() => { setView("login"); setErr(""); setOk(""); }}>
+          ← Back to sign in
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ── Reset password view ── */
+  if (view === "reset") return (
+    <div className="auth-root">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="auth-brand-icon">📄</div>
+          <div className="auth-brand-name">DOCU<span>Assist</span></div>
+        </div>
+        <div className="auth-sub">Create a new password</div>
+        {err && <div className="auth-err">{err}</div>}
+        {ok  && <div className="auth-ok">{ok}</div>}
+        {!ok && <>
+          <div className="auth-field">
+            <label>New password</label>
+            <div className="pw-wrap">
+              <input type={showNewPw ? "text" : "password"} value={form.newPw}
+                onChange={set("newPw")} placeholder="Min 6 characters" autoFocus/>
+              <button className="pw-eye" onClick={() => setShowNewPw((v) => !v)} type="button">
+                <EyeIcon open={showNewPw}/>
+              </button>
+            </div>
+          </div>
+          <div className="auth-field">
+            <label>Confirm new password</label>
+            <div className="pw-wrap">
+              <input type={showNewPw ? "text" : "password"} value={form.newPw2}
+                onChange={set("newPw2")} placeholder="Repeat password"
+                onKeyDown={onKey(submitReset)}/>
+              <button className="pw-eye" onClick={() => setShowNewPw((v) => !v)} type="button">
+                <EyeIcon open={showNewPw}/>
+              </button>
+            </div>
+          </div>
+          <button className="auth-btn" onClick={submitReset} disabled={loading}>
+            {loading ? "Saving…" : "Set new password →"}
+          </button>
+        </>}
+        <button className="auth-btn secondary" onClick={() => { setView("login"); setErr(""); setOk(""); }}>
+          ← Back to sign in
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ── Login / register view ── */
   return (
     <div className="auth-root">
       <div className="auth-card">
@@ -371,42 +566,79 @@ function AuthScreen({ onLogin }) {
           <div className="auth-brand-name">DOCU<span>Assist</span></div>
         </div>
         <div className="auth-sub">AI-powered document intelligence</div>
-
         <div className="auth-tabs">
           {["login", "signup"].map((t) => (
             <div key={t} className={`auth-tab${tab === t ? " on" : ""}`}
-              onClick={() => { setTab(t); setErr(""); }}>
+              onClick={() => { setTab(t); setErr(""); setOk(""); }}>
               {t === "login" ? "Sign in" : "Create account"}
             </div>
           ))}
         </div>
-
         {err && <div className="auth-err">{err}</div>}
-
+        {ok  && <div className="auth-ok">{ok}</div>}
         {tab === "signup" && (
           <div className="auth-field">
             <label>Name</label>
-            <input value={form.name} onChange={set("name")} placeholder="Your name" />
+            <input value={form.name} onChange={set("name")} placeholder="Your name" autoFocus/>
           </div>
         )}
         <div className="auth-field">
           <label>Email</label>
-          <input type="email" value={form.email} onChange={set("email")} placeholder="you@email.com"
-            onKeyDown={(e) => e.key === "Enter" && submit()} />
+          <input type="email" value={form.email} onChange={set("email")}
+            placeholder="you@email.com" onKeyDown={onKey(submit)}
+            autoFocus={tab === "login"}/>
         </div>
         <div className="auth-field">
           <label>Password</label>
-          <input type="password" value={form.password} onChange={set("password")} placeholder="••••••••"
-            onKeyDown={(e) => e.key === "Enter" && submit()} />
+          <div className="pw-wrap">
+            <input type={showPw ? "text" : "password"} value={form.password}
+              onChange={set("password")} placeholder="••••••••"
+              onKeyDown={onKey(submit)}/>
+            <button className="pw-eye" onClick={() => setShowPw((v) => !v)} type="button">
+              <EyeIcon open={showPw}/>
+            </button>
+          </div>
         </div>
+        {tab === "login" && (
+          <>
+            <label className="auth-remember">
+              <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)}/>
+              <span>Remember me</span>
+            </label>
+            <span className="auth-forgot" onClick={() => { setView("forgot"); setErr(""); setOk(""); }}>
+              Forgot password?
+            </span>
+          </>
+        )}
         <button className="auth-btn" onClick={submit} disabled={loading}>
           {loading ? "Please wait…" : tab === "login" ? "Sign in →" : "Create account →"}
         </button>
         <div className="auth-hint">
           {tab === "login" ? "Don't have an account? " : "Already have an account? "}
-          <span onClick={() => { setTab(tab === "login" ? "signup" : "login"); setErr(""); }}>
+          <span onClick={() => { setTab(tab === "login" ? "signup" : "login"); setErr(""); setOk(""); }}>
             {tab === "login" ? "Create one" : "Sign in"}
           </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Delete confirmation modal ────────────────────────────────────────────── */
+function DeleteDocModal({ doc, onConfirm, onCancel, loading }) {
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-title">Delete document?</div>
+        <div className="modal-body">
+          This will permanently delete <strong>{doc.name}</strong> and remove it from all future queries.
+          This action cannot be undone.
+        </div>
+        <div className="modal-actions">
+          <button className="modal-btn cancel" onClick={onCancel} disabled={loading}>Cancel</button>
+          <button className="modal-btn danger" onClick={onConfirm} disabled={loading}>
+            {loading ? "Deleting…" : "Delete"}
+          </button>
         </div>
       </div>
     </div>
@@ -506,6 +738,10 @@ function Message({ msg, userInitials }) {
 
 /* ─── Main App ────────────────────────────────────────────────────────────── */
 export default function DocuAssist() {
+  // Check URL for a password-reset token (e.g. ?reset_token=xxx)
+  const urlParams        = new URLSearchParams(window.location.search);
+  const urlResetToken    = urlParams.get("reset_token") || "";
+
   const [token, setToken]               = useState(() => localStorage.getItem("da_token"));
   const [user, setUser]                 = useState(() => {
     try { return JSON.parse(localStorage.getItem("da_user") || "null"); } catch { return null; }
@@ -524,15 +760,20 @@ export default function DocuAssist() {
   const [isAnswering, setIsAnswering]   = useState(false);
   const [sidebarOpen, setSidebarOpen]   = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  // Document delete confirmation
+  const [docToDelete, setDocToDelete]   = useState(null);
+  const [deletingDoc, setDeletingDoc]   = useState(false);
+
   const fileRef = useRef(null);
   const msgsRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Auto-scroll on new message
   useEffect(() => {
     if (msgsRef.current) msgsRef.current.scrollTop = msgsRef.current.scrollHeight;
   }, [messages]);
 
-  // FIX: Persist token/user across page refresh
+  // Persist token/user across page refresh
   useEffect(() => {
     if (token) localStorage.setItem("da_token", token);
     else localStorage.removeItem("da_token");
@@ -542,10 +783,22 @@ export default function DocuAssist() {
     else localStorage.removeItem("da_user");
   }, [user]);
 
-  // FIX: Load initial data on mount if already logged in
+  // Load initial data on mount if already logged in
   useEffect(() => {
     if (token) loadInitial(token);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Global keyboard shortcut: Ctrl/Cmd+K focuses input
+  useEffect(() => {
+    function onKey(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
   async function loadInitial(tok) {
@@ -564,6 +817,8 @@ export default function DocuAssist() {
   function handleLogin(tok, usr) {
     setToken(tok);
     setUser(usr);
+    // Clean the URL if we came from a reset link
+    if (urlResetToken) window.history.replaceState({}, "", window.location.pathname);
     loadInitial(tok);
   }
 
@@ -588,17 +843,13 @@ export default function DocuAssist() {
     }
   }
 
-  // FIX: Chat history selection now works — apiFetch is defined
   async function selectChat(id) {
     if (id === activeChatId) { setSidebarOpen(false); return; }
     setLoadingHistory(true);
     setActiveChatId(id);
     setMessages([]);
     const { ok, data } = await apiFetch(`/api/chats/${id}/messages`, {}, token);
-    if (ok) {
-      // Attach timestamp display to loaded messages
-      setMessages(data.map((m) => ({ ...m, time: "" })));
-    }
+    if (ok) setMessages(data.map((m) => ({ ...m, time: "" })));
     setLoadingHistory(false);
     setSidebarOpen(false);
   }
@@ -609,7 +860,6 @@ export default function DocuAssist() {
     if (activeChatId === id) { setActiveChatId(null); setMessages([]); }
   }
 
-  // FIX: Document toggle — select/deselect individual docs
   function toggleDoc(id) {
     setActiveDocIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -619,6 +869,22 @@ export default function DocuAssist() {
   function selectAllDocs() { setActiveDocIds(docs.map((d) => d.id)); }
   function selectNoDocs()   { setActiveDocIds([]); }
 
+  // ── Document delete ─────────────────────────────────────────────────────────
+  async function confirmDeleteDoc() {
+    if (!docToDelete) return;
+    setDeletingDoc(true);
+    try {
+      const { ok } = await apiFetch(`/api/documents/${docToDelete.id}`, { method: "DELETE" }, token);
+      if (ok || true) { // remove from UI regardless (backend returns 'deleted' or 'not found')
+        setDocs((prev) => prev.filter((d) => d.id !== docToDelete.id));
+        setActiveDocIds((prev) => prev.filter((id) => id !== docToDelete.id));
+      }
+    } finally {
+      setDeletingDoc(false);
+      setDocToDelete(null);
+    }
+  }
+
   async function handleUpload(file) {
     if (!file || !file.name.toLowerCase().endsWith(".pdf")) {
       setUploadDone("Only PDF files allowed.");
@@ -627,7 +893,6 @@ export default function DocuAssist() {
     setUploading(true);
     setUploadFile(file.name);
     setUploadDone("");
-
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -638,7 +903,6 @@ export default function DocuAssist() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Upload failed");
-
       const doc = {
         id: data.doc_id || data.id,
         name: data.name || data.filename,
@@ -661,7 +925,7 @@ export default function DocuAssist() {
     setQuestion("");
     setIsAnswering(true);
 
-    const userMsg   = { id: uid(), role: "user",      content: q,  time: now(), sources: [] };
+    const userMsg   = { id: uid(), role: "user",      content: q, time: now(), sources: [] };
     const typingMsg = { id: uid(), role: "assistant",  content: "", typing: true, time: now() };
     setMessages((p) => [...p, userMsg, typingMsg]);
 
@@ -672,20 +936,16 @@ export default function DocuAssist() {
         body: JSON.stringify({ question: q, doc_ids: activeDocIds, chat_id: activeChatId ?? null }),
       });
       const data = await res.json();
-
       setMessages((prev) => {
         const without = prev.filter((m) => !m.typing);
         const botMsg = {
-          id: uid(),
-          role: "assistant",
+          id: uid(), role: "assistant",
           content: res.ok ? data.answer : `Error: ${data.detail || "Query failed"}`,
           sources: res.ok ? (data.sources || []) : [],
           time: now(),
         };
         return [...without, botMsg];
       });
-
-      // FIX: Update chat list with new/updated chat from backend
       if (data.chat_id) {
         setActiveChatId(data.chat_id);
         setChats((prev) => {
@@ -700,7 +960,7 @@ export default function DocuAssist() {
           return [{ id: data.chat_id, title: q.slice(0, 55) }, ...prev];
         });
       }
-    } catch (err) {
+    } catch {
       setMessages((prev) => [
         ...prev.filter((m) => !m.typing),
         { id: uid(), role: "assistant", content: "Server error — is the backend running?", sources: [], time: now() },
@@ -717,16 +977,31 @@ export default function DocuAssist() {
     "What are the conclusions or recommendations?",
   ];
 
-  if (!token) return (<><style>{CSS}</style><AuthScreen onLogin={handleLogin}/></>);
+  if (!token || urlResetToken) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <AuthScreen onLogin={handleLogin} initialResetToken={urlResetToken}/>
+      </>
+    );
+  }
 
   const userInits = initials(user?.name || "U");
 
   return (
     <>
       <style>{CSS}</style>
-      <div className="app">
+      {/* Delete confirmation modal */}
+      {docToDelete && (
+        <DeleteDocModal
+          doc={docToDelete}
+          onConfirm={confirmDeleteDoc}
+          onCancel={() => setDocToDelete(null)}
+          loading={deletingDoc}
+        />
+      )}
 
-        {/* Mobile sidebar overlay */}
+      <div className="app">
         <div className={`sidebar-overlay${sidebarOpen ? " open" : ""}`}
           onClick={() => setSidebarOpen(false)} />
 
@@ -825,7 +1100,6 @@ export default function DocuAssist() {
               )}
               {uploadDone && <div className="upload-ok">{uploadDone}</div>}
 
-              {/* FIX: Document selection with select-all / deselect-all controls */}
               {docs.length > 0 && (
                 <div style={{ marginTop: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -841,10 +1115,24 @@ export default function DocuAssist() {
                     {docs.map((d) => {
                       const on = activeDocIds.includes(d.id);
                       return (
-                        <div key={d.id} className={`doc-chip${on ? " on" : ""}`} onClick={() => toggleDoc(d.id)}>
+                        <div key={d.id} className={`doc-chip${on ? " on" : ""}`}
+                          onClick={() => toggleDoc(d.id)}>
                           <div className="doc-chip-dot"/>
                           <span className="doc-chip-name">{d.name}</span>
                           <span className="doc-chip-pg">{d.pages}p</span>
+                          {/* Delete button — stops propagation so it doesn't also toggle */}
+                          <button
+                            className="doc-chip-del"
+                            title="Delete document"
+                            onClick={(e) => { e.stopPropagation(); setDocToDelete(d); }}
+                          >
+                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                              <path d="M10 11v6"/><path d="M14 11v6"/>
+                              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                            </svg>
+                          </button>
                         </div>
                       );
                     })}
@@ -872,7 +1160,7 @@ export default function DocuAssist() {
                 <div className="chips">
                   {SUGGESTIONS.map((s) => (
                     <button key={s} className="sug-chip"
-                      onClick={() => { if (!activeDocIds.length) return; setQuestion(s); }}>
+                      onClick={() => { if (!activeDocIds.length) return; setQuestion(s); inputRef.current?.focus(); }}>
                       "{s}"
                     </button>
                   ))}
@@ -894,6 +1182,7 @@ export default function DocuAssist() {
             )}
             <div className="input-wrap">
               <input
+                ref={inputRef}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleAsk()}
@@ -912,10 +1201,18 @@ export default function DocuAssist() {
                 </svg>
               </button>
             </div>
-            <div className="input-hint">DocuAssist answers only from your documents · RAG + FAISS · FastAPI + Gemini</div>
+            <div className="input-hint">
+              Press <span className="kbd">Enter</span> to send · <span className="kbd">Ctrl K</span> to focus · RAG + FAISS · FastAPI + Gemini
+            </div>
           </div>
         </div>
       </div>
     </>
   );
 }
+
+
+
+
+
+

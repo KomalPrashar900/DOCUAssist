@@ -15,7 +15,7 @@ app.add_middleware(CORSMiddleware,
     allow_credentials=True)     
 
 # Public routes (no auth required)
-app.include_router(auth.router,      prefix='/api', tags=['Auth'])
+app.include_router(auth.router,      prefix='/api', tags=['Auth'])  
 
 # Protected routes (JWT required on every endpoint)
 app.include_router(upload.router,    prefix='/api', tags=['Upload'])
