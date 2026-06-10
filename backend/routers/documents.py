@@ -19,7 +19,7 @@ def list_documents(current=Depends(get_current_user),
 
 @router.delete('/documents/{doc_id}')
 def delete_document(doc_id: str,
-                    current=Depends(get_current_user),
+                    current=Depends(get_current_user),   
                     db: Session=Depends(get_db)):
     import os, shutil
     doc = db.query(Document).filter(
