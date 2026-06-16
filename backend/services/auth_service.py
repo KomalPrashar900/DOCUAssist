@@ -17,7 +17,7 @@ pwd_ctx = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
 )
-print(pwd_ctx.hash("secret"))
+# print(pwd_ctx.hash("secret"))
 
 oauth2 = OAuth2PasswordBearer(
     tokenUrl="/api/auth/login"
@@ -25,14 +25,14 @@ oauth2 = OAuth2PasswordBearer(
 
 
 def hash_password(plain: str) -> str:
-    print("Hashing password:", plain)
-    print(f"Password length: {len(plain)}")
+    # print("Hashing password:", plain)
+    # print(f"Password length: {len(plain)}")
     return pwd_ctx.hash(plain)
 print("pwd_ctx :",pwd_ctx)
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    print("Verifying password:", plain)
+    print("Verifying password:", plain)        
     return pwd_ctx.verify(plain, hashed)
     
 

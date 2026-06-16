@@ -1,22 +1,18 @@
-# backend/services/rag_service.py
-# used to ingest documents (chunking + embedding) and answer questions (retrieval + LLM); uses langchain for RAG orchestration and Google Gemini as the LLM
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 from services.embed_service import (
     add_to_faiss,
     search_faiss
 )
 
+from dotenv import load_dotenv
+import os
 
-load_dotenv()                                                                                                                    
+
+load_dotenv()
+print("GOOGLE_API_KEY =", os.getenv("GOOGLE_API_KEY"))
 
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP"))
@@ -26,7 +22,7 @@ LLM_MODEL = os.getenv("LLM_MODEL")
 RAG_PROMPT = PromptTemplate(
     input_variables=["context", "question"],
     template="""
-You are a helpful document assistant. 
+You are a helpful document assistant.
 
 Answer the question using ONLY the information
 from the context below.

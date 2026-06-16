@@ -8,7 +8,7 @@ app = FastAPI(title='DocuAssist API', version='2.0.0',
               description='AI Document Intelligence — RAG + JWT Auth')
    
     
-app.add_middleware(CORSMiddleware,           
+app.add_middleware(CORSMiddleware,                           
     allow_origins=[ 'http://localhost:5173'],   # React dev server   
     allow_methods=['*'],
     allow_headers=['*'],
@@ -17,7 +17,7 @@ app.add_middleware(CORSMiddleware,
 # Public routes (no auth required)
 app.include_router(auth.router,      prefix='/api', tags=['Auth'])  
 
-# Protected routes (JWT required on every endpoint)
+# Protected routes (JWT required on every endpoint)        
 app.include_router(upload.router,    prefix='/api', tags=['Upload'])
 app.include_router(query.router,     prefix='/api', tags=['Query'])
 app.include_router(history.router,   prefix='/api', tags=['History'])

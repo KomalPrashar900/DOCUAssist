@@ -4,8 +4,7 @@ venv/
 .vscode/
 backend/docuassist.db
 backend/faiss_index/
-__pycache__/
-*.pyc
+
 
 
 # frontend/ .gitignore
@@ -28,15 +27,5 @@ dist
 dist-ssr
 *.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 
 
