@@ -5,25 +5,25 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
-import os
-
+import os     
+    
 load_dotenv()
-
+    
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 TOKEN_EXPIRE_HOURS = int(os.getenv("TOKEN_EXPIRE_HOURS"))
 
 pwd_ctx = CryptContext(
     schemes=["bcrypt"],
-    deprecated="auto"
+    deprecated="auto"                           
 )
-# print(pwd_ctx.hash("secret"))
-
+# print(pwd_ctx.hash("secret"))  
+   
 oauth2 = OAuth2PasswordBearer(
     tokenUrl="/api/auth/login"
 )
 
-
+  
 def hash_password(plain: str) -> str:
     # print("Hashing password:", plain)
     # print(f"Password length: {len(plain)}")
@@ -34,7 +34,7 @@ print("pwd_ctx :",pwd_ctx)
 def verify_password(plain: str, hashed: str) -> bool:
     print("Verifying password:", plain)        
     return pwd_ctx.verify(plain, hashed)
-    
+      
 
 def create_token(user_id: str, email: str) -> str:
     exp = datetime.now(timezone.utc) + timedelta(

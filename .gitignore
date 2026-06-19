@@ -4,8 +4,7 @@ venv/
 .vscode/
 backend/docuassist.db
 backend/faiss_index/
-
-
+__pycache__/
 
 # frontend/ .gitignore
 /frontend/node_modules

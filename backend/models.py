@@ -8,7 +8,7 @@ def gen_id(): return str(uuid.uuid4())
 
 class User(Base):
     __tablename__ = 'users'
-    id              = Column(String, primary_key=True, default=gen_id)
+    id              = Column(String, primary_key=True, default=gen_id)  
     email           = Column(String, unique=True, nullable=False, index=True)
     name            = Column(String, nullable=False)
     password        = Column(String, nullable=False)        # bcrypt hash
