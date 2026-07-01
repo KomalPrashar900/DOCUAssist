@@ -41,8 +41,8 @@ Question:
 
 Answer:
 """
-)
 
+)
 
 def chunk_pages(pages: list[dict]) -> list[dict]:
     splitter = RecursiveCharacterTextSplitter(

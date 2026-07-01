@@ -21,23 +21,20 @@ def ask(
     current = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    print("STEP 1")
-
+       
     user_id = current['sub']
-    
-    print("STEP 2")
-    print("REQ CHAT ID =", req.chat_id)
-
+      
+ 
     # Create or validate chat session
     if req.chat_id:
-        print("STEP 3A")
+        print("STEP 3A")                                                                                                                                
         chat = db.query(Chat).filter(Chat.id == req.chat_id,
                                      Chat.user_id == user_id).first()
         if not chat: raise HTTPException(404, 'Chat not found')
     else:
         print("STEP 3B - creating chat")
         print("CREATING NEW CHAT")
-        chat = Chat(user_id=user_id)
+        chat = Chat(user_id=user_id)  
         db.add(chat); 
         db.commit(); 
         db.refresh(chat)

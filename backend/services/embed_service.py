@@ -8,7 +8,7 @@ load_dotenv()
 
 FAISS_ROOT = os.getenv("FAISS_INDEX_DIR")
 
-
+print("Before embeddings")
 def get_embeddings():
 
     print("USING GEMINI EMBEDDING MODEL")
@@ -28,10 +28,10 @@ def user_index_path(user_id: str, doc_id: str):
     )
 
     os.makedirs(path, exist_ok=True)
-
+    print("After embeddings")
     return path
 
-
+  
 def add_to_faiss(
     user_id: str,
     doc_id: str,
@@ -53,30 +53,31 @@ def add_to_faiss(
 
     vs = FAISS.from_documents(
         docs,
-        get_embeddings()
+        get_embeddings()     
     )
 
     vs.save_local(
         user_index_path(user_id, doc_id)
     )
-
+    
+    print("After FAISS")
     return len(docs)
 
 
-def search_faiss(
+def search_faiss( 
     user_id: str,
     doc_ids: list[str],
     question: str,
-    k: int = 4
+    k: int = 20
 ):
 
     embeddings = get_embeddings()
-
+  
     all_hits = []
 
     for doc_id in doc_ids:
 
-        path = user_index_path(
+        path        = user_index_path(
             user_id,
             doc_id
         )
@@ -101,5 +102,5 @@ def search_faiss(
         )
 
         all_hits.extend(hits)
-
+        print("After DB Save")
     return all_hits

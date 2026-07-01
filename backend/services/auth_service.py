@@ -12,13 +12,13 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 TOKEN_EXPIRE_HOURS = int(os.getenv("TOKEN_EXPIRE_HOURS"))
-
+   
 pwd_ctx = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"                           
 )
 # print(pwd_ctx.hash("secret"))  
-   
+      
 oauth2 = OAuth2PasswordBearer(
     tokenUrl="/api/auth/login"
 )
@@ -33,7 +33,7 @@ print("pwd_ctx :",pwd_ctx)
 
 def verify_password(plain: str, hashed: str) -> bool:
     print("Verifying password:", plain)        
-    return pwd_ctx.verify(plain, hashed)
+    return pwd_ctx.verify(plain, hashed)  
       
 
 def create_token(user_id: str, email: str) -> str:
@@ -54,7 +54,7 @@ def create_token(user_id: str, email: str) -> str:
     )
 
 
-def decode_token(token: str) -> dict:
+def decode_token(token: str) -> dict:                              
     try:
         payload = jwt.decode(
             token,
